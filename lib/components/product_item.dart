@@ -2,58 +2,73 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:provider/provider.dart';
-import 'package:shop/models/product.dart';
-import 'package:shop/utils/apps_routes.dart';
+import 'package:shop/models/product_list.dart';
 
-import '../models/cart.dart';
+import '../models/product.dart';
+import '../utils/apps_routes.dart';
 
 class ProductItem extends StatelessWidget {
+  final Product product;
+  const ProductItem(
+    this.product, {
+    super.key,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final product = Provider.of<Product>(
-      context,
-      listen:
-          false, // Não está escutando mais as alterações. Com isso, há uma otimização, pois pode-se escutar as alterações apenas em pontos que elas serão alteradas
-    );
-
-    final cart = Provider.of<Cart>(context);
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: GridTile(
-        child: GestureDetector(
-          child: Image.network(
-            product.imageUrl,
-            fit: BoxFit.cover,
-          ),
-          onTap: () {
-            Navigator.of(context)
-                .pushNamed(AppRoutes.PRODUCT_DETAIL, arguments: product);
-          },
-        ),
-        footer: GridTileBar(
-          backgroundColor: Colors.black87,
-          leading: Consumer<Product>(
-            builder: (ctx, product, child) => IconButton(
-              icon: Icon(
-                  product.isFavorite ? Icons.favorite : Icons.favorite_border),
-              color: Theme.of(context).accentColor,
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundImage: NetworkImage(product.imageUrl),
+      ),
+      title: Text(product.name),
+      trailing: Container(
+        width: 100,
+        child: Row(
+          children: [
+            IconButton(
               onPressed: () {
-                product.toggleFavorite();
+                Navigator.of(context).pushNamed(
+                  AppRoutes.PRODUCT_FORM,
+                  arguments: product,
+                );
               },
+              icon: Icon(Icons.edit),
+              color: Theme.of(context).primaryColor,
             ),
-          ),
-          title: Text(
-            product.name,
-            textAlign: TextAlign.center,
-          ),
-          trailing: IconButton(
-            onPressed: () {
-              cart.addItem(product);
-            },
-            icon: Icon(Icons.shopping_cart),
-            color: Theme.of(context).accentColor,
-          ),
+            IconButton(
+              onPressed: () {
+                showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text('Excluir produto'),
+                    content: Text('Tem certeza?'),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: Text('Não')),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.of(ctx).pop(true);
+                          },
+                          child: Text('Sim')),
+                    ],
+                  ),
+                ).then(
+                  (value) => {
+                    if (value ?? false)
+                      {
+                        Provider.of<ProductList>(
+                          context,
+                          listen: false,
+                        ).removeProduct(product)
+                      }
+                  },
+                );
+              },
+              icon: Icon(Icons.delete),
+              color: Theme.of(context).errorColor,
+            )
+          ],
         ),
       ),
     );
