@@ -26,7 +26,7 @@ class CartCount extends StatelessWidget {
             padding: EdgeInsets.all(2),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: color ?? Theme.of(context).accentColor,
+              color: color ?? Theme.of(context).hintColor,
             ),
             constraints: BoxConstraints(
               minHeight: 16,
