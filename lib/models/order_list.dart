@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:shop/models/cart_item.dart';
@@ -10,7 +9,15 @@ import 'order.dart';
 import 'package:http/http.dart' as http;
 
 class OrderList with ChangeNotifier {
+  final String _token;
+  final String _userId;
   List<Order> _items = [];
+
+  OrderList([
+    this._token = '',
+    this._userId = '',
+    this._items = const [],
+  ]);
 
   List<Order> get items {
     return [..._items];
@@ -21,16 +28,16 @@ class OrderList with ChangeNotifier {
   }
 
   Future<void> loadOrders() async {
-    _items.clear();
+    List<Order> items = [];
 
-    final response =
-        await http.get(Uri.parse('${Constants.ORDER_BASE_URL}.json'));
+    final response = await http
+        .get(Uri.parse('${Constants.ORDER_BASE_URL}/$_userId.json?auth=$_token'));
 
     if (response.body == 'null') return;
 
     Map<String, dynamic> data = jsonDecode(response.body);
     data.forEach((orderId, orderData) {
-      _items.add(
+      items.add(
         Order(
           id: orderId,
           date: DateTime.parse(orderData['date']),
@@ -47,6 +54,9 @@ class OrderList with ChangeNotifier {
         ),
       );
     });
+
+    _items = items.reversed.toList();
+
     notifyListeners();
   }
 
@@ -55,7 +65,7 @@ class OrderList with ChangeNotifier {
 
     final response = await http.post(
       Uri.parse(
-          '${Constants.ORDER_BASE_URL}.json'), // No firebase a URL deve terminar com .json
+          '${Constants.ORDER_BASE_URL}/$_userId.json?auth=$_token'), // No firebase a URL deve terminar com .json
       body: jsonEncode(
         {
           'total': cart.totalAmount,
